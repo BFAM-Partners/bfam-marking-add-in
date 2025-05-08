@@ -52,7 +52,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@v2
     - name: Calculate Version
       id: version
       run: |
@@ -80,10 +80,10 @@ jobs:
         $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
         $newContent | Set-Content -Path "MarkingSheet.csproj"
       shell: pwsh
-    # - name: build
-    #   run: |
-    #     cd MarkingSheet
-    #     msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
+    - name: build
+      run: |
+        cd MarkingSheet
+        msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
 
     # - name: Configure AWS credentials
     #   run: |
