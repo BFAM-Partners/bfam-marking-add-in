@@ -51,13 +51,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    # - name: Setup MSBuild
-    #   uses: microsoft/setup-msbuild@v2
-    # - name: Restore NuGet packages
-    #   run: |
-    #     cd MarkingSheet
-    #     nuget restore MarkingSheet.csproj -SolutionDirectory ..
-    #   shell: pwsh
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+    - name: Restore NuGet packages
+      run: |
+        cd MarkingSheet
+        nuget restore MarkingSheet.csproj -SolutionDirectory ..
+      shell: pwsh
     - name: Calculate Version
       id: version
       run: |
@@ -81,46 +81,36 @@ jobs:
         echo "revision=$revision" >> $env:GITHUB_OUTPUT
         echo "s3_path=$s3Path" >> $env:GITHUB_OUTPUT
         
-    #     # Actually update the file
-    #     $newContent = $csproj -replace '<ApplicationVersion>\d+\.\d+\.\d+\.\d+</ApplicationVersion>', "<ApplicationVersion>$fullVersion</ApplicationVersion>"
-    #     $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
-    #     $newContent | Set-Content -Path "MarkingSheet.csproj"
-    #   shell: pwsh
-    # - name: cert
-    #   run: |
-    #     cd MarkingSheet
-    #     $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-    #     Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
-    # - name: build
-    #   run: |
-    #     cd MarkingSheet
-    #     msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
+        # Actually update the file
+        $newContent = $csproj -replace '<ApplicationVersion>\d+\.\d+\.\d+\.\d+</ApplicationVersion>', "<ApplicationVersion>$fullVersion</ApplicationVersion>"
+        $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
+        $newContent | Set-Content -Path "MarkingSheet.csproj"
+      shell: pwsh
+    - name: cert
+      run: |
+        cd MarkingSheet
+        $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
+    - name: build
+      run: |
+        cd MarkingSheet
+        msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
 
     - name: "Configure AWS Credentials"
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
-        # AWS Region, e.g. us-east-2
         aws-region: ap-east-1
         aws-access-key-id: ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
           
-    # - name: Configure AWS credentials
-    #   run: |  
-    #     aws configure set aws_access_key_id ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
-    #     aws configure set aws_secret_access_key ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
-    #     aws configure set aws_session_token ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
-
     - name: Sync files to S3
       run: |
-        # cd MarkingSheet/publish
-        # ls
-        # aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
-        # aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
-        cd MarkingSheet
-        aws s3 cp app.config s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/app.config --region=ap-east-1 
-        aws s3 sync "Resources" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
-
+        cd MarkingSheet/publish
+        ls
+        aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
+        aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
+        
 
 
 
