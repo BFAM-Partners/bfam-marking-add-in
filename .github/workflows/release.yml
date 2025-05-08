@@ -22,7 +22,8 @@ on:
         type: environment
         required: true
         default: 'prd'
-
+permissions:
+  contents: write
 jobs:
   get-aws-session-token:
     environment: ${{ inputs.ENVIRONMENT }}
@@ -122,6 +123,14 @@ jobs:
         aws stepfunctions start-execution `
           --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
           --input $inputJson
+    - name: Commit csproj file to update version in repo
+      run: |
+        git add MarkingSheet/MarkingSheet.csproj
+        git commit -m "CI Auto update MarkingSheet.csproj - Update ApplicationVersion"
+        git push 
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
 
 
 
