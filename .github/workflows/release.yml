@@ -107,11 +107,12 @@ jobs:
           
     - name: Sync MarkingSheet files to S3
       run: |
+        $s3_path = "${{ steps.version.outputs.s3_path }}"
         # cd MarkingSheet/publish
         # ls
         # aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
         # aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
-        aws s3 cp README.md s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/README.md --region=ap-east-1 
+        aws s3 cp README.md "s3://bfam-eq-linked-prd-steps-storage/$s3_path/README.md" --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
         aws stepfunctions start-execution `
