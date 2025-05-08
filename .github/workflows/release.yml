@@ -111,7 +111,7 @@ jobs:
         # aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
         cd MarkingSheet
         aws s3 cp app.config s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/app.config --region=ap-east-1 
-        aws s3 sync "Resources" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
+        aws s3 sync "Resources" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
 
 
 
