@@ -95,13 +95,21 @@ jobs:
     #   run: |
     #     cd MarkingSheet
     #     msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
-        
-    - name: Configure AWS credentials
-      run: |  
-        aws configure set aws_access_key_id ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
-        aws configure set aws_secret_access_key ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
-        aws configure set aws_session_token ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
-        $env:AWS_DEFAULT_REGION = "ap-east-1"
+
+    - name: "Configure AWS Credentials"
+      uses: aws-actions/configure-aws-credentials@v4.1.0
+      with:
+        # AWS Region, e.g. us-east-2
+        aws-region: ap-east-1
+        aws-access-key-id: ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
+          
+    # - name: Configure AWS credentials
+    #   run: |  
+    #     aws configure set aws_access_key_id ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
+    #     aws configure set aws_secret_access_key ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
+    #     aws configure set aws_session_token ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
 
     - name: Sync files to S3
       run: |
