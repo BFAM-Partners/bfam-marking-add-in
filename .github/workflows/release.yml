@@ -53,11 +53,14 @@ jobs:
       uses: actions/checkout@v3
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
-    - name: version
+    - name: Packages
       run: |
         cd MarkingSheet
         nuget restore MarkingSheet.csproj -SolutionDirectory ..
       
+    - name: version
+      run: |
+        cd MarkingSheet
         # Auto-increment version from existing
         $csproj = Get-Content -Path "MarkingSheet.csproj"
         $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
