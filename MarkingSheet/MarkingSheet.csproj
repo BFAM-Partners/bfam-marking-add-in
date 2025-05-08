@@ -346,7 +346,7 @@
     <ManifestCertificateThumbprint>9FDB70833337167AF3413125FCACC9A691781E7E</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>bfam-excel-add-in_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
