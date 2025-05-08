@@ -8,11 +8,11 @@ on:
         type: choice
         required: true
         options:
+          - 'arn:aws:iam::619324241968:mfa/jgrace-admin-work'
           - 'arn:aws:iam::619324241968:mfa/thay-admin'          
           - 'arn:aws:iam::619324241968:mfa/jeroen-github_home'
           - 'arn:aws:iam::619324241968:mfa/jvanderven-github-actions'
           - 'arn:aws:iam::619324241968:mfa/jgrace-admin-home'
-          - 'arn:aws:iam::619324241968:mfa/jgrace-admin-work'
       MFA_CODE:
         description: 'MFA code'
         required: true
@@ -49,8 +49,8 @@ jobs:
     runs-on: windows-latest
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
-    # - name: Checkout code
-    #   uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
     # - name: Setup MSBuild
     #   uses: microsoft/setup-msbuild@v2
     # - name: Restore NuGet packages
