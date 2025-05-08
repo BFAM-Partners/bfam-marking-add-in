@@ -72,7 +72,8 @@ jobs:
         $fullVersion = "$baseVersion.$revision"
         
         # Create S3 folder path with version
-        $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion"
+        $commitHash = "${{ github.sha }}".Substring(0, 7)
+        $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion-$commitHash"
         
         # Output values for next steps
         echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
@@ -94,19 +95,20 @@ jobs:
       run: |
         cd MarkingSheet
         msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
+        
+    - name: Configure AWS credentials
+      run: |  
+        aws configure set aws_access_key_id ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
+        aws configure set aws_session_token ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
+        export AWS_DEFAULT_REGION=ap-east-1
 
-    # - name: Configure AWS credentials
-    #   run: |
-    #     aws configure set aws_access_key_id ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
-    #     aws configure set aws_secret_access_key ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
-    #     aws configure set aws_session_token ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
-    #     export AWS_DEFAULT_REGION=ap-east-1
-
-    # - name: Sync files to S3
-    #   run: |
-    #     cd MarkingSheet/publish
-    #     aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
-    #     aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
+    - name: Sync files to S3
+      run: |
+        cd MarkingSheet/publish
+        ls
+        aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
+        aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
 
 
 
