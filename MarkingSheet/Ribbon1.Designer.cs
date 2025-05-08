@@ -74,7 +74,7 @@ namespace MarkingSheet
             this.tab1.Groups.Add(this.group2);
             this.tab1.Groups.Add(this.CB_Marking);
             this.tab1.Groups.Add(this.bloombergGroup);
-            this.tab1.Label = "BFAM Credit";
+            this.tab1.Label = "BFAM Marking";
             this.tab1.Name = "tab1";
             // 
             // group1
