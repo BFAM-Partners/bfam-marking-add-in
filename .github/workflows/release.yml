@@ -59,7 +59,6 @@ jobs:
         nuget restore MarkingSheet.csproj -SolutionDirectory ..
       
         # Auto-increment version from existing
-        cd MarkingSheet
         $csproj = Get-Content -Path "MarkingSheet.csproj"
         $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
         $baseVersion = $versionMatch.Groups[1].Value
