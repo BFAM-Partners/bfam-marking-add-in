@@ -53,10 +53,10 @@ jobs:
       uses: actions/checkout@v3
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
-    - name: Packages
-      run: |
-        cd MarkingSheet
-        nuget restore MarkingSheet.csproj -SolutionDirectory ..
+    # - name: Packages
+    #   run: |
+    #     cd MarkingSheet
+    #     nuget restore MarkingSheet.csproj -SolutionDirectory ..
       
     - name: version
       run: |
@@ -69,10 +69,12 @@ jobs:
         
         # Create complete version
         $fullVersion = "$baseVersion.$revision"
+        Write-Host $fullVersion
         
         # Create S3 folder path with version
         $commitHash = "${{ github.sha }}".Substring(0, 7)
         $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion-$commitHash"
+        Write-Host $s3Path
         
         # Output values for next steps
         echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
@@ -85,15 +87,15 @@ jobs:
         $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
         $newContent | Set-Content -Path "MarkingSheet.csproj"
       shell: pwsh
-    - name: Install cert to personal windows certificate store
-      run: |
-        cd MarkingSheet
-        $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-        Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
-    - name: Build add-in
-      run: |
-        cd MarkingSheet
-        msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
+    # - name: Install cert to personal windows certificate store
+    #   run: |
+    #     cd MarkingSheet
+    #     $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+    #     Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
+    # - name: Build add-in
+    #   run: |
+    #     cd MarkingSheet
+    #     msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4.1.0
@@ -105,10 +107,11 @@ jobs:
           
     - name: Sync MarkingSheet files to S3
       run: |
-        cd MarkingSheet/publish
-        ls
-        aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
-        aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
+        # cd MarkingSheet/publish
+        # ls
+        # aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
+        # aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
+        aws s3 cp README.md s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/README.md --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
         aws stepfunctions start-execution `
