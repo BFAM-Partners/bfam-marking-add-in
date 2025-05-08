@@ -85,6 +85,11 @@ jobs:
         $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
         $newContent | Set-Content -Path "MarkingSheet.csproj"
       shell: pwsh
+    - name: cert
+      run: |
+        cd MarkingSheet
+        $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
     - name: build
       run: |
         cd MarkingSheet
