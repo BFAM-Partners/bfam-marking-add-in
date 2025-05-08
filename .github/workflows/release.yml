@@ -58,28 +58,28 @@ jobs:
     #     cd MarkingSheet
     #     nuget restore MarkingSheet.csproj -SolutionDirectory ..
     #   shell: pwsh
-    # - name: Calculate Version
-    #   id: version
-    #   run: |
-    #     # Auto-increment from existing
-    #     cd MarkingSheet
-    #     $csproj = Get-Content -Path "MarkingSheet.csproj"
-    #     $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
-    #     $baseVersion = $versionMatch.Groups[1].Value
-    #     $revision = [int]$versionMatch.Groups[2].Value + 1
+    - name: Calculate Version
+      id: version
+      run: |
+        # Auto-increment from existing
+        cd MarkingSheet
+        $csproj = Get-Content -Path "MarkingSheet.csproj"
+        $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
+        $baseVersion = $versionMatch.Groups[1].Value
+        $revision = [int]$versionMatch.Groups[2].Value + 1
         
-    #     # Create complete version
-    #     $fullVersion = "$baseVersion.$revision"
+        # Create complete version
+        $fullVersion = "$baseVersion.$revision"
         
-    #     # Create S3 folder path with version
-    #     $commitHash = "${{ github.sha }}".Substring(0, 7)
-    #     $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion-$commitHash"
+        # Create S3 folder path with version
+        $commitHash = "${{ github.sha }}".Substring(0, 7)
+        $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion-$commitHash"
         
-    #     # Output values for next steps
-    #     echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
-    #     echo "base_version=$baseVersion" >> $env:GITHUB_OUTPUT
-    #     echo "revision=$revision" >> $env:GITHUB_OUTPUT
-    #     echo "s3_path=$s3Path" >> $env:GITHUB_OUTPUT
+        # Output values for next steps
+        echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
+        echo "base_version=$baseVersion" >> $env:GITHUB_OUTPUT
+        echo "revision=$revision" >> $env:GITHUB_OUTPUT
+        echo "s3_path=$s3Path" >> $env:GITHUB_OUTPUT
         
     #     # Actually update the file
     #     $newContent = $csproj -replace '<ApplicationVersion>\d+\.\d+\.\d+\.\d+</ApplicationVersion>', "<ApplicationVersion>$fullVersion</ApplicationVersion>"
@@ -105,10 +105,13 @@ jobs:
 
     - name: Sync files to S3
       run: |
-        cd MarkingSheet/publish
-        ls
-        aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
-        aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
+        # cd MarkingSheet/publish
+        # ls
+        # aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
+        # aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
+        cd MarkingSheet
+        aws s3 cp app.config s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/app.config --region=ap-east-1 
+        aws s3 sync "Resources" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
 
 
 
