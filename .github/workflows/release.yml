@@ -116,7 +116,7 @@ jobs:
         # aws s3 cp README.md "s3://bfam-eq-linked-prd-steps-storage/$s3_path/README.md" --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
-        $s3_path = "bfam-excel-add-in/MarkingSheet/1.0.0.7-0b4e27b"
+        $s3_path = "${{ steps.version.outputs.s3_path }}"
         $inputObj = @{ s3Path = $s3_path }
         $inputJson = $inputObj | ConvertTo-Json -Compress
         aws stepfunctions start-execution `
