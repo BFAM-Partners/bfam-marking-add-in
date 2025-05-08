@@ -116,9 +116,10 @@ jobs:
         # aws s3 cp README.md "s3://bfam-eq-linked-prd-steps-storage/$s3_path/README.md" --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
+        $s3_path = "${{ steps.version.outputs.s3_path }}"
         aws stepfunctions start-execution `
           --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
-          --input "{\"s3Path\": \"${{ steps.version.outputs.s3_path }}\"}"
+          --input "{\"s3Path\": \"$s3_Path\"}" 
 
 
 
