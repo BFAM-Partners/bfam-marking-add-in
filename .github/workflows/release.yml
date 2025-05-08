@@ -53,7 +53,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
-    - name: Restore NuGet packages and get version
+    - name: version
       run: |
         cd MarkingSheet
         nuget restore MarkingSheet.csproj -SolutionDirectory ..
@@ -108,8 +108,8 @@ jobs:
         aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
-        aws stepfunctions start-execution \ 
-          --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" \
+        aws stepfunctions start-execution `
+          --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
           --input "{\"s3Path\": \"${{ steps.version.outputs.s3_path }}\"}"
 
 
