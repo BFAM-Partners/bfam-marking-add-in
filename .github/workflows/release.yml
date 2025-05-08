@@ -1,0 +1,103 @@
+name: Release Service
+run-name: ${{ github.actor }} is deploying MarkingSheet to S3 bfam-eq-linked-prd-steps-storage
+on:
+  workflow_dispatch:
+    inputs:
+      MFA_DEVICE:
+        description: 'MFA device'
+        type: choice
+        required: true
+        options:
+          - 'arn:aws:iam::619324241968:mfa/thay-admin'          
+          - 'arn:aws:iam::619324241968:mfa/jeroen-github_home'
+          - 'arn:aws:iam::619324241968:mfa/jvanderven-github-actions'
+          - 'arn:aws:iam::619324241968:mfa/jgrace-admin-home'
+          - 'arn:aws:iam::619324241968:mfa/jgrace-admin-work'
+      MFA_CODE:
+        description: 'MFA code'
+        required: true
+        default: ''
+      ENVIRONMENT:
+        description: 'Environment to run against'
+        type: environment
+        required: true
+        default: 'prd'
+
+jobs:
+  get-aws-session-token:
+    environment: ${{ inputs.ENVIRONMENT }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: step1
+        run: |
+          aws sts get-session-token --region ap-east-1 --duration-seconds 1800 --serial-number ${{ inputs.MFA_DEVICE }} --token-code ${{ inputs.MFA_CODE }} | tee session-key.json
+
+          echo AWS_ACCESS_KEY_ID=$(cat session-key.json | jq -r '.Credentials.AccessKeyId') >> $GITHUB_OUTPUT
+          echo AWS_SECRET_ACCESS_KEY=$(cat session-key.json | jq -r '.Credentials.SecretAccessKey') >> $GITHUB_OUTPUT
+          echo AWS_SESSION_TOKEN=$(cat session-key.json | jq -r '.Credentials.SessionToken') >> $GITHUB_OUTPUT
+
+    outputs:
+      AWS_ACCESS_KEY_ID: ${{ steps.step1.outputs.AWS_ACCESS_KEY_ID}}
+      AWS_SECRET_ACCESS_KEY: ${{ steps.step1.outputs.AWS_SECRET_ACCESS_KEY}}
+      AWS_SESSION_TOKEN: ${{ steps.step1.outputs.AWS_SESSION_TOKEN}}
+
+  deploy:
+    needs: [ get-aws-session-token ]
+    runs-on: windows-latest
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+    - name: Calculate Version
+      id: version
+      run: |
+        # Auto-increment from existing
+        cd MarkingSheet
+        $csproj = Get-Content -Path "MarkingSheet.csproj"
+        $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
+        $baseVersion = $versionMatch.Groups[1].Value
+        $revision = [int]$versionMatch.Groups[2].Value + 1
+        
+        # Create complete version
+        $fullVersion = "$baseVersion.$revision"
+        
+        # Create S3 folder path with version
+        $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion"
+        
+        # Output values for next steps
+        echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
+        echo "base_version=$baseVersion" >> $env:GITHUB_OUTPUT
+        echo "revision=$revision" >> $env:GITHUB_OUTPUT
+        echo "s3_path=$s3Path" >> $env:GITHUB_OUTPUT
+        
+        # Actually update the file
+        $newContent = $csproj -replace '<ApplicationVersion>\d+\.\d+\.\d+\.\d+</ApplicationVersion>', "<ApplicationVersion>$fullVersion</ApplicationVersion>"
+        $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
+        $newContent | Set-Content -Path "MarkingSheet.csproj"
+      shell: pwsh
+    - name: build
+      run: |
+        cd MarkingSheet
+        msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
+
+    - name: Configure AWS credentials
+      run: |
+        aws configure set aws_access_key_id ${{ needs.get-aws-session-token.outputs.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
+        aws configure set aws_session_token ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
+        export AWS_DEFAULT_REGION=ap-east-1
+
+    - name: Sync files to S3
+      run: |
+        cd MarkingSheet/publish
+        aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
+        aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/Application\ Files --region=ap-east-1 
+
+
+
+
