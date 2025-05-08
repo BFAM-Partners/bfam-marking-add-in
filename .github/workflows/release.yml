@@ -59,6 +59,7 @@ jobs:
     #     nuget restore MarkingSheet.csproj -SolutionDirectory ..
       
     - name: version
+      id: version
       run: |
         cd MarkingSheet
         # Auto-increment version from existing
