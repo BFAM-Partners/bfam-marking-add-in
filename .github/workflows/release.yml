@@ -121,11 +121,10 @@ jobs:
         ls
         aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
         aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
-        # aws s3 cp README.md "s3://bfam-eq-linked-prd-steps-storage/$s3_path/README.md" --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
         $s3_path = "${{ steps.version.outputs.s3_path }}"
-        $inputObj = @{ s3Path = $s3_path }
+        $inputObj = @{ s3Path = $s3_path; app = "MarkingSheet" }
         $inputJson = $inputObj | ConvertTo-Json -Compress
         aws stepfunctions start-execution `
           --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
