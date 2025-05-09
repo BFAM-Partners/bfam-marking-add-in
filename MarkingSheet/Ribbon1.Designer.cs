@@ -152,7 +152,7 @@ namespace MarkingSheet
             this.bloombergGroup.Items.Add(this.ovcvButton);
             this.bloombergGroup.Items.Add(this.allqButton);
             this.bloombergGroup.Items.Add(this.bvalButton);
-            this.bloombergGroup.Label = "Bloomberg";
+            this.bloombergGroup.Label = "Bloomberg Functions";
             this.bloombergGroup.Name = "bloombergGroup";
             // 
             // bbgDesButton
