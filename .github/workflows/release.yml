@@ -123,7 +123,7 @@ jobs:
         $inputJson = $inputObj | ConvertTo-Json -Compress
         $executionArn = aws stepfunctions start-execution `
           --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
-          --input $inputJson
+          --input $inputJson `
           --query 'executionArn' `
           --output text
         
