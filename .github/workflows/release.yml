@@ -128,7 +128,6 @@ jobs:
         #   --output text
         $executionArn = aws stepfunctions start-execution `
           --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:monitoring-dashboard-backend-step" `
-          # --input $inputJson
           --query 'executionArn' `
           --output text
 
