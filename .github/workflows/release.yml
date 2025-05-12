@@ -50,56 +50,56 @@ jobs:
     runs-on: windows-latest
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
-    # - name: Checkout code
-    #   uses: actions/checkout@v3
-    # - name: Setup MSBuild
-    #   uses: microsoft/setup-msbuild@v2
-    # - name: Cache
-    #   uses: actions/cache@v3
-    #   with:
-    #     path: ~/.nuget/packages
-    #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.config') }}
-    #     restore-keys: |
-    #         ${{ runner.os }}-nuget-
-    # - name: Packages
-    #   run: |
-    #     cd MarkingSheet
-    #     nuget restore MarkingSheet.csproj -SolutionDirectory ..
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.config') }}
+        restore-keys: |
+            ${{ runner.os }}-nuget-
+    - name: Packages
+      run: |
+        cd MarkingSheet
+        nuget restore MarkingSheet.csproj -SolutionDirectory ..
       
-    # - name: version
-    #   id: version
-    #   run: |
-    #     cd MarkingSheet
-    #     $csproj = Get-Content -Path "MarkingSheet.csproj"
-    #     $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
-    #     $baseVersion = $versionMatch.Groups[1].Value
-    #     $revision = [int]$versionMatch.Groups[2].Value + 1
+    - name: version
+      id: version
+      run: |
+        cd MarkingSheet
+        $csproj = Get-Content -Path "MarkingSheet.csproj"
+        $versionMatch = [regex]::Match($csproj, '<ApplicationVersion>(\d+\.\d+\.\d+)\.(\d+)</ApplicationVersion>')
+        $baseVersion = $versionMatch.Groups[1].Value
+        $revision = [int]$versionMatch.Groups[2].Value + 1
         
-    #     $fullVersion = "$baseVersion.$revision"
-    #     Write-Host $fullVersion
+        $fullVersion = "$baseVersion.$revision"
+        Write-Host $fullVersion
         
-    #     $commitHash = "${{ github.sha }}".Substring(0, 7)
-    #     $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion-$commitHash"
-    #     Write-Host $s3Path
+        $commitHash = "${{ github.sha }}".Substring(0, 7)
+        $s3Path = "bfam-excel-add-in/MarkingSheet/$fullVersion-$commitHash"
+        Write-Host $s3Path
         
-    #     echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
-    #     echo "base_version=$baseVersion" >> $env:GITHUB_OUTPUT
-    #     echo "revision=$revision" >> $env:GITHUB_OUTPUT
-    #     echo "s3_path=$s3Path" >> $env:GITHUB_OUTPUT
+        echo "new_version=$fullVersion" >> $env:GITHUB_OUTPUT
+        echo "base_version=$baseVersion" >> $env:GITHUB_OUTPUT
+        echo "revision=$revision" >> $env:GITHUB_OUTPUT
+        echo "s3_path=$s3Path" >> $env:GITHUB_OUTPUT
         
-    #     $newContent = $csproj -replace '<ApplicationVersion>\d+\.\d+\.\d+\.\d+</ApplicationVersion>', "<ApplicationVersion>$fullVersion</ApplicationVersion>"
-    #     $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
-    #     $newContent | Set-Content -Path "MarkingSheet.csproj"
-    #   shell: pwsh
-    # - name: Install cert to personal windows certificate store
-    #   run: |
-    #     cd MarkingSheet
-    #     $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-    #     Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
-    # - name: Build add-in
-    #   run: |
-    #     cd MarkingSheet
-    #     msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
+        $newContent = $csproj -replace '<ApplicationVersion>\d+\.\d+\.\d+\.\d+</ApplicationVersion>', "<ApplicationVersion>$fullVersion</ApplicationVersion>"
+        $newContent = $newContent -replace '<ApplicationRevision>\d+</ApplicationRevision>', "<ApplicationRevision>$revision</ApplicationRevision>"
+        $newContent | Set-Content -Path "MarkingSheet.csproj"
+      shell: pwsh
+    - name: Install cert to personal windows certificate store
+      run: |
+        cd MarkingSheet
+        $certPwd = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Import-PfxCertificate -FilePath "bfam-excel-add-in_TemporaryKey.pfx" -CertStoreLocation "Cert:\CurrentUser\My" -Password $certPwd
+    - name: Build add-in
+      run: |
+        cd MarkingSheet
+        msbuild MarkingSheet.csproj /t:Publish /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /p:PublishDir=publish/ /p:ApplicationVersion=${{ steps.version.outputs.new_version }}
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4.1.0
@@ -109,28 +109,24 @@ jobs:
         aws-secret-access-key: ${{ needs.get-aws-session-token.outputs.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ needs.get-aws-session-token.outputs.AWS_SESSION_TOKEN }}
           
-    # - name: Sync MarkingSheet files to S3
-    #   run: |
-    #     $s3_path = "${{ steps.version.outputs.s3_path }}"
-    #     cd MarkingSheet/publish
-    #     ls
-    #     aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
-    #     aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
+    - name: Sync MarkingSheet files to S3
+      run: |
+        $s3_path = "${{ steps.version.outputs.s3_path }}"
+        cd MarkingSheet/publish
+        ls
+        aws s3 cp MarkingSheet.vsto s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/MarkingSheet.vsto --region=ap-east-1 
+        aws s3 sync "Application Files" s3://bfam-eq-linked-prd-steps-storage/${{ steps.version.outputs.s3_path }}/"Application Files" --region=ap-east-1 
     - name: Trigger SSMDeploy Step function
       run: |
-        # $s3_path = "${{ steps.version.outputs.s3_path }}"
-        # $inputObj = @{ s3Path = $s3_path; app = "MarkingSheet" }
-        # $inputJson = $inputObj | ConvertTo-Json -Compress
-        # $executionArn = aws stepfunctions start-execution `
-        #   --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
-        #   --input $inputJson
-        #   --query 'executionArn' `
-        #   --output text
+        $s3_path = "${{ steps.version.outputs.s3_path }}"
+        $inputObj = @{ s3Path = $s3_path; app = "MarkingSheet" }
+        $inputJson = $inputObj | ConvertTo-Json -Compress
         $executionArn = aws stepfunctions start-execution `
-          --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:monitoring-dashboard-backend-step" `
+          --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
+          --input $inputJson
           --query 'executionArn' `
           --output text
-
+        
         Write-Host "Started Step Function execution: $executionArn"
         echo "execution_arn=$executionArn" >> $env:GITHUB_OUTPUT
 
@@ -162,15 +158,13 @@ jobs:
         	Write-Host "Step Function execution failed"
             exit 1
         } 
-
-
-    # - name: Commit csproj file to update version in repo
-    #   run: |
-    #     git config --global user.name 'GitHub Actions'
-    #     git config --global user.email 'github-actions@github.com'
-    #     git add MarkingSheet/MarkingSheet.csproj
-    #     git commit -m "CI Auto update MarkingSheet.csproj - Update ApplicationVersion"
-    #     git push 
+    - name: Commit csproj file to update version in repo
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'github-actions@github.com'
+        git add MarkingSheet/MarkingSheet.csproj
+        git commit -m "CI Auto update MarkingSheet.csproj - Update ApplicationVersion"
+        git push 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
