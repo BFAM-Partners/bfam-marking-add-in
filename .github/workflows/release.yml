@@ -126,9 +126,45 @@ jobs:
         $s3_path = "${{ steps.version.outputs.s3_path }}"
         $inputObj = @{ s3Path = $s3_path; app = "MarkingSheet" }
         $inputJson = $inputObj | ConvertTo-Json -Compress
-        aws stepfunctions start-execution `
+        $executionArn = aws stepfunctions start-execution `
           --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
           --input $inputJson
+          --query 'executionArn' `
+          --output text
+
+        Write-Host "Started Step Function execution: $executionArn"
+        echo "execution_arn=$executionArn" >> $env:GITHUB_OUTPUT
+
+        $status = "RUNNING"
+        $maxAttempts = 10  # Total time = maxAttempts * sleepTime (in seconds)
+        $sleepTime = 30
+        $attempt = 1
+        while ($status -eq "RUNNING" -and $attempt -le $maxAttempts) {
+            Write-Host "Waiting for Step Function to complete (attempt $attempt/$maxAttempts)..."
+            Start-Sleep -Seconds $sleepTime
+            
+            # Get current execution status
+            $status = aws stepfunctions describe-execution `
+              --execution-arn "$executionArn" `
+              --query 'status' `
+              --output text
+            Write-Host "Current status: $status"
+            $attempt++
+        }
+        
+        if ($attempt -gt $maxAttempts) {
+            Write-Host "::error::Timeout waiting for Step Function to complete"
+            exit 1
+        }
+
+        if ($status -eq "SUCCEEDED") {
+            Write-Host "Step Function execution completed successfully!"
+        } else {
+        	Write-Host "Step Function execution failed"
+            exit 1
+        } 
+
+
     - name: Commit csproj file to update version in repo
       run: |
         git config --global user.name 'GitHub Actions'
