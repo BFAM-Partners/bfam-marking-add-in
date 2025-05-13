@@ -122,7 +122,7 @@ jobs:
         $inputObj = @{ s3Path = $s3_path; app = "MarkingSheet" }
         $inputJson = $inputObj | ConvertTo-Json -Compress
         $executionArn = aws stepfunctions start-execution `
-          --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment" `
+          --state-machine-arn "arn:aws:states:ap-east-1:619324241968:stateMachine:update-vsto-deployment-step" `
           --input $inputJson `
           --query 'executionArn' `
           --output text
