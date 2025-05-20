@@ -31,7 +31,7 @@ namespace MarkingSheet.Data
             {"XXXXXX","SeniorLossAbsorbingCapacity"},
         };
 
-        public static List<IceCdsCurve> FetchIceCurves(List<SophisCdsCurve> sophisCurves)
+        public static void EnrichMarkingSheetCdsCurveWithIceCds(IEnumerable<MarkingSheetCds> markingSheetCurves)
         {
             var serverString = _eqlinkedConnectionString;            
 
@@ -53,8 +53,7 @@ namespace MarkingSheet.Data
                         "AND (c.doc_clause = :doc_clause OR :is_index = true) " +
                         "AND c.currency = :currency ";
 
-            List<IceCdsCurve> iceCurves = new List<IceCdsCurve>();
-            Parallel.ForEach(sophisCurves, new ParallelOptions { MaxDegreeOfParallelism = 5 }, curve =>
+            Parallel.ForEach(markingSheetCurves, new ParallelOptions { MaxDegreeOfParallelism = 5 }, curve =>
             {
                 var iceCurve = new IceCdsCurve
                 {
@@ -65,6 +64,7 @@ namespace MarkingSheet.Data
                     Ticker = curve.Ticker,
                     isIndex = curve.isIndex
                 };
+                curve.iceCdsCurve = iceCurve;
 
                 var curveQuery = eqlDataSource.CreateCommand(query);
 
@@ -113,12 +113,10 @@ namespace MarkingSheet.Data
                         iceCurve.IceCurveDate = hktCurveTimestamp;
                         iceCurve.Name = name;
                     }
-                }
-                iceCurves.Add(iceCurve);
+                }                
             });
             eqlConnection.Dispose();
             eqlDataSource.Dispose();
-            return iceCurves;
         }
 
     }

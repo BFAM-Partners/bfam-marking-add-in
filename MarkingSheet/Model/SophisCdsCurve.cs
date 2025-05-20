@@ -10,7 +10,7 @@ namespace MarkingSheet.Model
         public string DocClause { get; set; }
         public string Currency { get; set; }
         public int SwapSicovam { get; set; }
-        public bool isIndex { get; set; }
+        public bool isIndex { get; set; }        
 
         public override bool Equals(object obj)
         {

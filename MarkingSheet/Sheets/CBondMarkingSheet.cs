@@ -328,7 +328,7 @@ namespace MarkingSheet
             mergeCurrent.Font.Bold = true;
             mergeEOD.Font.Bold = true;
             
-            Utils.AddDataTable(activeSheet, convertibleBonds.Count, "Positions", rowCursor, numOfColumns, 1, false);
+            Utils.ReplaceDatatable(activeSheet, convertibleBonds.Count, "Positions", rowCursor, numOfColumns, 1, false);
             foreach (Columns column in Enum.GetValues(typeof(Columns)))
             {
                 activeSheet.Cells[rowCursor, column] = columnNames[(int)column];

@@ -31,7 +31,7 @@ namespace MarkingSheet
             return columnName;
         }
 
-        public static void AddDataTable(Worksheet worksheet, int rowCount, string datatableName, int rowCursor, int columnCount, int columnCursor = 1, bool showTotals = false)
+        public static void ReplaceDatatable(Worksheet worksheet, int rowCount, string datatableName, int rowCursor, int columnCount, int columnCursor = 1, bool showTotals = false, string tableStyle = "TableStyleMedium2")
         {
             // Remove the datatable so we can recreate it
             if (worksheet.ListObjects.Count > 0)
@@ -39,10 +39,17 @@ namespace MarkingSheet
 
                 var allDataTables = worksheet.ListObjects.Cast<object>().Select((t, i) => worksheet.ListObjects[i + 1]).ToList();
                 allDataTables.ForEach(list =>
-                {
-                    list.DataBodyRange.ClearFormats();
-                    list.HeaderRowRange.ClearFormats();
-                    list.Delete();
+                {                    
+                    var matchesName = list.Name == datatableName;
+                    if (matchesName)
+                    {
+                        if (list.DataBodyRange != null)
+                        {
+                            list.DataBodyRange.ClearFormats();
+                        }
+                        list.HeaderRowRange.ClearFormats();
+                        list.Delete();
+                    }
                 });
             }
 
@@ -53,7 +60,7 @@ namespace MarkingSheet
                 Type.Missing);
             dataTable.Name = datatableName;
             dataTable.ShowTotals = showTotals;
-            dataTable.TableStyle = "TableStyleMedium2";
+            dataTable.TableStyle = tableStyle;
             
             worksheet.Application.AutoCorrect.AutoFillFormulasInLists = false;
         }
@@ -73,6 +80,11 @@ namespace MarkingSheet
                 foreach (var header in headers)
                 {
                     content.Headers.Add(header as string);
+                }
+
+                if (list.DataBodyRange == null)
+                {
+                    return content;
                 }
 
                 object[,] body = list.DataBodyRange.Value;

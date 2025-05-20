@@ -18,6 +18,7 @@ namespace MarkingSheet.Model
         public DateTime? CurveDate { get; set; }
         public bool isIndex { get; set; }
 
+        public IceCdsCurve iceCdsCurve { get; set; }
 
         public override bool Equals(object obj)
         {

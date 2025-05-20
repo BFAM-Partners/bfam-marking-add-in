@@ -46,9 +46,11 @@ namespace MarkingSheet
                 return;
             }
 
-            var currentTable = Utils.GetDataTableContentsRaw(activeSheet);
+            var availableTables = Utils.GetDataTableContentsRaw(activeSheet);
 
-            if (currentTable != null && currentTable.Count() == 0) 
+            var positionsTable = availableTables.Where(table => table.Name == "Positions").ToList();
+
+            if (positionsTable != null && positionsTable.Count() == 0) 
             {
                 MessageBox.Show("No instruments available for marking");
                 return;
@@ -56,7 +58,7 @@ namespace MarkingSheet
 
             var invalidMarks = new List<String>();
 
-            var readMarks = currentTable.First().Rows.Select(row =>
+            var readMarks = positionsTable.First().Rows.Select(row =>
             {
                 if (!int.TryParse(row["Sicovam"].ToString(), out int sicovam))
                 {
@@ -76,7 +78,7 @@ namespace MarkingSheet
                 };
             });
 
-            var theoMarks = currentTable.First().Rows.Select(row =>
+            var theoMarks = positionsTable.First().Rows.Select(row =>
             {
                 if (!int.TryParse(row["Sicovam"].ToString(), out int sicovam))
                 {
@@ -141,7 +143,7 @@ namespace MarkingSheet
             }
 
 
-            var curves = CdsMarkingSheet.GetCurves(activeSheet);
+            var curves = CdsMarkingSheet.GetCurves(activeSheet, "CDSCurves");
 
             var byReference = curves.GroupBy(x => x.Ticker);
 
