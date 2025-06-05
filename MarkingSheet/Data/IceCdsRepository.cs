@@ -55,6 +55,11 @@ namespace MarkingSheet.Data
 
             Parallel.ForEach(markingSheetCurves, new ParallelOptions { MaxDegreeOfParallelism = 5 }, curve =>
             {
+                if(curve.Seniority == null)
+                {
+                    throw new Exception($"Error for Ticker: {curve.Ticker}. Position (Sicovam: {curve.SwapSicovam}) is missing 'Seniority' in Sophis. Please add Seniority in Sophis and then refresh this sheet after a few minutes.");
+                }
+
                 var iceCurve = new IceCdsCurve
                 {
                     SophisCurveSicovam = curve.CurveSicovam,

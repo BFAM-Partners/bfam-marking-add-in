@@ -75,11 +75,21 @@ namespace MarkingSheet.Sheets
 
             var sophisCdsCurvesAsMarkingSheetCdsCurve = mapSophisPositionsToMarkingSheetCdsCurves(sophisCdsCurves, curvesAlreadyInSheetLookup);
 
-            IceCdsRepository.EnrichMarkingSheetCdsCurveWithIceCds(sophisCdsCurvesAsMarkingSheetCdsCurve);
 
-            // Tracker
-            IceCdsRepository.EnrichMarkingSheetCdsCurveWithIceCds(trackerCurvesInSheet);
+            try
+            {
+                IceCdsRepository.EnrichMarkingSheetCdsCurveWithIceCds(sophisCdsCurvesAsMarkingSheetCdsCurve);
 
+                // Tracker
+                IceCdsRepository.EnrichMarkingSheetCdsCurveWithIceCds(trackerCurvesInSheet);
+
+            }
+            catch (AggregateException ex)
+            {
+                MessageBox.Show(ex.InnerException.Message);
+                return;
+            }
+            
             // Clear all borders            
             clearBorders(activeSheet, new int[]{ IceOneYear, SevenMinusFiveYear, IceCurveDate, Ticker_Column, Sicovam_Column });
             
